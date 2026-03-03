@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>AVG Inzageverzoek Generator (Artikel 15)</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; max-width: 920px; margin: 32px auto; padding: 0 16px; }
+    h1 { font-size: 1.6rem; margin: 0 0 8px; }
+    p  { margin: 0 0 18px; line-height: 1.45; }
+    .card { border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px; margin: 16px 0; box-shadow: 0 1px 2px rgba(0,0,0,.04); }
+    label { display:block; font-weight: 600; margin-top: 10px; }
+    input, textarea, select { width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 10px; margin-top: 6px; font-size: 14px; }
+    textarea { min-height: 110px; }
+    .row { display:grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 720px){ .row{ grid-template-columns: 1fr; } }
+    .btns { display:flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+    button { padding: 10px 14px; border: 1px solid #111827; background: #111827; color: #fff; border-radius: 10px; cursor: pointer; font-weight: 700; }
+    button.secondary { background:#fff; color:#111827; }
+    button.ghost { background:#fff; color:#111827; border-color:#d1d5db; }
+    #result { white-space: pre-wrap; background:#f9fafb; border:1px solid #e5e7eb; border-radius: 12px; padding: 14px; min-height: 220px; }
+    .small { font-size: 12px; color:#374151; }
+    .ok { color: #065f46; font-weight: 700; }
+  </style>
+
+  <!-- jsPDF (client-side PDF generation) -->
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js" defer></script>
+</head>
+<body>
+
+  <h1>AVG Inzageverzoek Generator</h1>
+  <p>Vul je gegevens in, genereer de tekst en verstuur via mail of download als PDF. (Artikel 15 AVG)</p>
+
+  <div class="card">
+    <div class="row">
+      <div>
+        <label>Naam</label>
+        <input id="naam" placeholder="Voor- en achternaam" />
+      </div>
+      <div>
+        <label>E-mailadres</label>
+        <input id="email" type="email" placeholder="naam@voorbeeld.nl" />
+      </div>
+    </div>
+
+    <div class="row">
+      <div>
+        <label>Adres</label>
+        <input id="adres" placeholder="Straat + huisnummer" />
+      </div>
+      <div>
+        <label>Postcode en woonplaats</label>
+        <input id="plaats" placeholder="1234 AB Plaats" />
+      </div>
+    </div>
+
+    <div class="row">
+      <div>
+        <label>Organisatie (verantwoordelijke)</label>
+        <input id="organisatie" placeholder="Bijv. Odido" />
+      </div>
+      <div>
+        <label>Versturen naar (e-mailadres organisatie)</label>
+        <input id="naar" placeholder="privacy@organisatie.nl" />
+      </div>
+    </div>
+
+    <label>Optioneel: extra identificatie (alleen als nodig)</label>
+    <input id="ident" placeholder="Bijv. klantnummer / laatste 4 cijfers contractnummer" />
+
+    <label>Optioneel: toelichting / context (bv. ‘mogelijk betrokken bij datalek’)</label>
+    <textarea id="context" placeholder="Korte toelichting (optioneel)"></textarea>
+
+    <div class="btns">
+      <button type="button" onclick="generate()">Genereer tekst</button>
+      <button type="button" class="secondary" onclick="openMail()">📩 Mail openen</button>
+      <button type="button" class="secondary" onclick="downloadPDF()">📄 Download PDF</button>
+      <button type="button" class="ghost" onclick="copyText()">📋 Kopieer tekst</button>
+      <button type="button" class="ghost" onclick="resetAll()">Reset</button>
+    </div>
+
+    <p class="small">
+      Tip: voeg geen BSN of kopie ID toe tenzij de organisatie dat expliciet en proportioneel vraagt.
+      Identiteitscontrole mag, maar “dataminimalisatie” blijft gelden.
+    </p>
+    <div id="msg" class="small"></div>
+  </div>
+
+  <div class="card">
+    <label>Resultaat</label>
+    <div id="result"></div>
+  </div>
+
+<script>
+function esc(v){ return (v ?? "").toString().trim(); }
+
+function buildLetter() {
+  const naam = esc(document.getElementById("naam").value) || "[Naam]";
+  const email = esc(document.getElementById("email").value) || "[E-mailadres]";
+  const adres = esc(document.getElementById("adres").value) || "[Adres]";
+  const plaats = esc(document.getElementById("plaats").value) || "[Postcode en woonplaats]";
+  const org = esc(document.getElementById("organisatie").value) || "[Organisatie]";
+  const ident = esc(document.getElementById("ident").value);
+  const context = esc(document.getElementById("context").value);
+
+  const extraIdent = ident ? `\nTer ondersteuning van mijn identificatie geef ik hierbij (alleen indien noodzakelijk): ${ident}\n` : "";
+  const extraContext = context ? `\nToelichting:\n${context}\n` : "";
+
+  const tekst =
+`Geachte heer/mevrouw,
+
+Hierbij doe ik een formeel beroep op mijn recht op inzage zoals vastgelegd in artikel 15 van de Algemene Verordening Gegevensbescherming (AVG).
+
+Ik verzoek u mij schriftelijk en volledig te informeren over alle persoonsgegevens die ${org} van mij verwerkt.
+
+Dit verzoek omvat in ieder geval:
+- Een volledig overzicht (kopie) van alle persoonsgegevens die u van mij heeft opgeslagen;
+- De doeleinden van verwerking;
+- De categorieën van persoonsgegevens;
+- De ontvangers of categorieën van ontvangers aan wie mijn gegevens zijn verstrekt;
+- De bewaartermijnen (of de criteria om deze te bepalen);
+- De herkomst van de gegevens (indien niet rechtstreeks van mij verkregen);
+- Informatie over eventuele geautomatiseerde besluitvorming of profilering (indien van toepassing).
+
+Daarnaast verzoek ik u expliciet te bevestigen:
+1. Of mijn persoonsgegevens betrokken zijn (geweest) bij een datalek of beveiligingsincident;
+2. Zo ja, om welke specifieke gegevens het ging;
+3. Wanneer dit incident heeft plaatsgevonden;
+4. Welke maatregelen zijn genomen om de gevolgen te beperken;
+5. Of en wanneer dit incident is gemeld bij de bevoegde toezichthouder.
+
+Ik verzoek u mij deze informatie kosteloos en binnen de wettelijke termijn van één maand na ontvangst van dit verzoek toe te sturen.
+
+Indien u aanvullende informatie nodig heeft om mijn identiteit te verifiëren, verzoek ik u dit zo spoedig mogelijk en gemotiveerd aan te geven, met inachtneming van het beginsel van dataminimalisatie.
+${extraIdent}${extraContext}
+Met vriendelijke groet,
+
+${naam}
+${adres}
+${plaats}
+${email}
+`;
+  return tekst;
+}
+
+function generate() {
+  const letter = buildLetter();
+  document.getElementById("result").textContent = letter;
+  flash("Tekst gegenereerd.", true);
+}
+
+function openMail() {
+  const to = esc(document.getElementById("naar").value);
+  const subject = "Verzoek tot inzage persoonsgegevens (AVG artikel 15)";
+  const body = buildLetter();
+
+  if (!to) {
+    flash("Vul eerst ‘Versturen naar’ (e-mailadres organisatie) in.", false);
+    return;
+  }
+  const mailto = `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  window.location.href = mailto;
+}
+
+async function downloadPDF() {
+  generate(); // ensure updated
+  const text = document.getElementById("result").textContent.trim();
+  if (!text) { flash("Geen tekst om te exporteren.", false); return; }
+
+  if (!window.jspdf || !window.jspdf.jsPDF) {
+    flash("PDF-library niet geladen (probeer opnieuw of controleer internet).", false);
+    return;
+  }
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit: "pt", format: "a4" });
+
+  const margin = 48;
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const maxWidth = pageWidth - margin*2;
+
+  doc.setFont("times", "normal");
+  doc.setFontSize(12);
+
+  const lines = doc.splitTextToSize(text, maxWidth);
+  let y = margin;
+
+  lines.forEach(line => {
+    if (y > doc.internal.pageSize.getHeight() - margin) {
+      doc.addPage();
+      y = margin;
+    }
+    doc.text(line, margin, y);
+    y += 16;
+  });
+
+  const filename = "avg-inzageverzoek.pdf";
+  doc.save(filename);
+  flash("PDF gedownload.", true);
+}
+
+async function copyText() {
+  generate(); // ensure updated
+  const text = document.getElementById("result").textContent;
+  if (!text.trim()) { flash("Geen tekst om te kopiëren.", false); return; }
+
+  try {
+    await navigator.clipboard.writeText(text);
+    flash("Tekst gekopieerd naar klembord.", true);
+  } catch {
+    // fallback
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand("copy");
+    document.body.removeChild(ta);
+    flash("Tekst gekopieerd (fallback).", true);
+  }
+}
+
+function resetAll() {
+  ["naam","email","adres","plaats","organisatie","naar","ident","context"].forEach(id => {
+    document.getElementById(id).value = "";
+  });
+  document.getElementById("result").textContent = "";
+  document.getElementById("msg").textContent = "";
+}
+
+function flash(message, ok) {
+  const el = document.getElementById("msg");
+  el.textContent = message;
+  el.className = "small " + (ok ? "ok" : "");
+  setTimeout(() => { el.textContent = ""; el.className = "small"; }, 3500);
+}
+</script>
+
+</body>
+</html>
