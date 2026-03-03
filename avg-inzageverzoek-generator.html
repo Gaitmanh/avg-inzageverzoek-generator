@@ -3,111 +3,548 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>AVG Inzageverzoek Generator (Artikel 15)</title>
+  <title>AVG Verzoek Generator (Artikel 15 e.v.)</title>
+  <meta name="description" content="Genereer een AVG verzoek (inzage, verwijdering, correctie, bezwaar, dataportabiliteit). Download als PDF of verstuur via e-mail. Geen opslag; alles lokaal in je browser." />
+
   <style>
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; max-width: 920px; margin: 32px auto; padding: 0 16px; }
-    h1 { font-size: 1.6rem; margin: 0 0 8px; }
-    p  { margin: 0 0 18px; line-height: 1.45; }
-    .card { border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px; margin: 16px 0; box-shadow: 0 1px 2px rgba(0,0,0,.04); }
-    label { display:block; font-weight: 600; margin-top: 10px; }
-    input, textarea, select { width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 10px; margin-top: 6px; font-size: 14px; }
-    textarea { min-height: 110px; }
-    .row { display:grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    @media (max-width: 720px){ .row{ grid-template-columns: 1fr; } }
-    .btns { display:flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
-    button { padding: 10px 14px; border: 1px solid #111827; background: #111827; color: #fff; border-radius: 10px; cursor: pointer; font-weight: 700; }
-    button.secondary { background:#fff; color:#111827; }
-    button.ghost { background:#fff; color:#111827; border-color:#d1d5db; }
-    #result { white-space: pre-wrap; background:#f9fafb; border:1px solid #e5e7eb; border-radius: 12px; padding: 14px; min-height: 220px; }
-    .small { font-size: 12px; color:#374151; }
-    .ok { color: #065f46; font-weight: 700; }
+    :root{
+      --bg:#0b1220;
+      --card:#0f172a;
+      --muted:#94a3b8;
+      --text:#e5e7eb;
+      --line:#1f2a44;
+      --soft:#111c34;
+      --btn:#e5e7eb;
+      --btnText:#0b1220;
+      --accent:#60a5fa;
+      --warn:#fbbf24;
+      --ok:#34d399;
+      --danger:#fb7185;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --radius:16px;
+    }
+
+    body{
+      margin:0; padding:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: radial-gradient(1200px 600px at 30% -10%, rgba(96,165,250,.25), transparent 60%),
+                  radial-gradient(900px 500px at 80% 10%, rgba(52,211,153,.14), transparent 55%),
+                  var(--bg);
+      color:var(--text);
+    }
+
+    .wrap{ max-width:1100px; margin: 28px auto; padding: 0 16px 40px; }
+    header{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+    .brand h1{ margin:0; font-size:1.4rem; letter-spacing:.2px; }
+    .brand p{ margin:6px 0 0; color:var(--muted); line-height:1.4; max-width: 60ch; }
+    .topbar{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+
+    .pill{
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.08);
+      color: var(--text);
+      padding: 8px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      display:flex; gap:8px; align-items:center;
+    }
+    .pill strong{ font-weight:800; }
+
+    .grid{
+      display:grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap:16px;
+      margin-top:16px;
+    }
+    @media (max-width: 980px){ .grid{ grid-template-columns:1fr; } }
+
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 16px;
+    }
+    .card h2{ margin:0 0 10px; font-size: 1.05rem; }
+    .card .sub{ margin:0 0 14px; color:var(--muted); font-size: 13px; line-height:1.45; }
+
+    .row{ display:grid; grid-template-columns: 1fr 1fr; gap:12px; }
+    @media (max-width: 720px){ .row{ grid-template-columns:1fr; } }
+
+    label{ display:block; margin-top:10px; font-weight:800; font-size:13px; color:#f3f4f6; }
+    input, textarea, select{
+      width:100%;
+      margin-top:6px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(15,23,42,.55);
+      color: var(--text);
+      outline:none;
+      font-size: 14px;
+    }
+    textarea{ min-height: 96px; resize: vertical; }
+
+    .btns{ display:flex; flex-wrap:wrap; gap:10px; margin-top: 14px; }
+    button{
+      border: 0;
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-weight: 900;
+      cursor:pointer;
+      transition: transform .06s ease, opacity .2s ease;
+    }
+    button:active{ transform: scale(.99); }
+    .primary{ background: var(--btn); color: var(--btnText); }
+    .secondary{ background: rgba(255,255,255,.06); color: var(--text); border:1px solid rgba(255,255,255,.14); }
+    .ghost{ background: transparent; color: var(--text); border:1px solid rgba(255,255,255,.14); }
+    .danger{ background: rgba(251,113,133,.14); color:#fff; border:1px solid rgba(251,113,133,.35); }
+    .hint{
+      margin-top: 10px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: rgba(96,165,250,.10);
+      border: 1px solid rgba(96,165,250,.25);
+      color: #eaf2ff;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+    .mini{
+      font-size: 12px; color: var(--muted); line-height:1.4;
+      margin-top: 10px;
+    }
+
+    #result{
+      white-space: pre-wrap;
+      background: rgba(2,6,23,.55);
+      border: 1px solid rgba(255,255,255,.10);
+      border-radius: 14px;
+      padding: 14px;
+      min-height: 330px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size: 12.8px;
+      line-height: 1.45;
+    }
+
+    .status{ margin-top: 10px; font-size: 13px; color: var(--muted); }
+    .status .ok{ color: var(--ok); font-weight: 900; }
+    .status .bad{ color: var(--danger); font-weight: 900; }
+
+    .qrbox{
+      display:flex; gap:14px; align-items:center; flex-wrap:wrap;
+      background: rgba(255,255,255,.03);
+      border:1px solid rgba(255,255,255,.08);
+      border-radius: 14px;
+      padding: 12px;
+      margin-top: 10px;
+    }
+    #qrcode{
+      width: 120px; height: 120px;
+      background: #fff;
+      border-radius: 10px;
+      padding: 8px;
+    }
+    .qrmeta{ flex: 1; min-width: 220px; }
+    .qrmeta .u{ font-weight:900; word-break: break-all; }
+    .tag{
+      display:inline-block;
+      padding: 4px 8px;
+      border-radius: 999px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.04);
+      font-size: 12px;
+      margin-right: 6px;
+      margin-top: 6px;
+      color: var(--muted);
+    }
   </style>
 
-  <!-- jsPDF (client-side PDF generation) -->
+  <!-- Client-side PDF generation -->
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js" defer></script>
+  <!-- QR code (no tracking; just a JS lib) -->
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js" defer></script>
 </head>
+
 <body>
-
-  <h1>AVG Inzageverzoek Generator</h1>
-  <p>Vul je gegevens in, genereer de tekst en verstuur via mail of download als PDF. (Artikel 15 AVG)</p>
-
-  <div class="card">
-    <div class="row">
-      <div>
-        <label>Naam</label>
-        <input id="naam" placeholder="Voor- en achternaam" />
-      </div>
-      <div>
-        <label>E-mailadres</label>
-        <input id="email" type="email" placeholder="naam@voorbeeld.nl" />
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <h1 id="t_title">AVG Verzoek Generator</h1>
+      <p id="t_desc">
+        Maak een AVG-verzoek (inzage, verwijdering, correctie, bezwaar, dataportabiliteit), download als PDF of open direct je e-mail.
+        Niets wordt opgeslagen: alles gebeurt lokaal in je browser.
+      </p>
+      <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">
+        <span class="pill"><strong id="t_today">Datum</strong>: <span id="today"></span></span>
+        <span class="pill"><strong id="t_privacy">Opslag</strong>: <span id="t_localonly">Geen (lokaal)</span></span>
       </div>
     </div>
 
-    <div class="row">
-      <div>
-        <label>Adres</label>
-        <input id="adres" placeholder="Straat + huisnummer" />
-      </div>
-      <div>
-        <label>Postcode en woonplaats</label>
-        <input id="plaats" placeholder="1234 AB Plaats" />
-      </div>
+    <div class="topbar">
+      <span class="pill">
+        <strong id="t_lang">Taal</strong>
+        <select id="lang" style="padding:6px 10px; border-radius:999px; border:1px solid rgba(255,255,255,.14); background:rgba(0,0,0,.15); color:var(--text);">
+          <option value="nl" selected>Nederlands</option>
+          <option value="en">English</option>
+        </select>
+      </span>
+      <button class="secondary" type="button" onclick="prefillOdido()">⚡ Odido quick-fill</button>
+      <button class="ghost" type="button" onclick="resetAll()">Reset</button>
     </div>
+  </header>
 
-    <div class="row">
-      <div>
-        <label>Organisatie (verantwoordelijke)</label>
-        <input id="organisatie" placeholder="Bijv. Odido" />
+  <div class="grid">
+    <section class="card">
+      <h2 id="t_form">Gegevens</h2>
+      <p class="sub" id="t_formsub">
+        Vul zo weinig mogelijk in. Een organisatie mag om identificatie vragen, maar dataminimalisatie blijft gelden.
+      </p>
+
+      <div class="row">
+        <div>
+          <label id="l_name">Naam</label>
+          <input id="name" placeholder="Voor- en achternaam" />
+        </div>
+        <div>
+          <label id="l_email">E-mailadres</label>
+          <input id="email" type="email" placeholder="naam@voorbeeld.nl" />
+        </div>
       </div>
-      <div>
-        <label>Versturen naar (e-mailadres organisatie)</label>
-        <input id="naar" placeholder="privacy@organisatie.nl" />
+
+      <div class="row">
+        <div>
+          <label id="l_addr">Adres</label>
+          <input id="addr" placeholder="Straat + huisnummer" />
+        </div>
+        <div>
+          <label id="l_city">Postcode en woonplaats</label>
+          <input id="city" placeholder="1234 AB Plaats" />
+        </div>
       </div>
-    </div>
 
-    <label>Optioneel: extra identificatie (alleen als nodig)</label>
-    <input id="ident" placeholder="Bijv. klantnummer / laatste 4 cijfers contractnummer" />
+      <div class="row">
+        <div>
+          <label id="l_org">Organisatie</label>
+          <input id="org" placeholder="Bijv. Odido" />
+        </div>
+        <div>
+          <label id="l_to">Versturen naar (e-mail organisatie)</label>
+          <input id="to" placeholder="privacy@organisatie.nl" />
+        </div>
+      </div>
 
-    <label>Optioneel: toelichting / context (bv. ‘mogelijk betrokken bij datalek’)</label>
-    <textarea id="context" placeholder="Korte toelichting (optioneel)"></textarea>
+      <div class="row">
+        <div>
+          <label id="l_type">Type verzoek</label>
+          <select id="type">
+            <option value="access" selected>Inzage (Art. 15 AVG)</option>
+            <option value="erasure">Verwijdering (Art. 17 AVG)</option>
+            <option value="rectification">Correctie (Art. 16 AVG)</option>
+            <option value="objection">Bezwaar (Art. 21 AVG)</option>
+            <option value="portability">Dataportabiliteit (Art. 20 AVG)</option>
+          </select>
+        </div>
+        <div>
+          <label id="l_ref">Optioneel: referentie (klantnummer e.d.)</label>
+          <input id="ref" placeholder="Bijv. klantnummer / contractnummer (optioneel)" />
+        </div>
+      </div>
 
-    <div class="btns">
-      <button type="button" onclick="generate()">Genereer tekst</button>
-      <button type="button" class="secondary" onclick="openMail()">📩 Mail openen</button>
-      <button type="button" class="secondary" onclick="downloadPDF()">📄 Download PDF</button>
-      <button type="button" class="ghost" onclick="copyText()">📋 Kopieer tekst</button>
-      <button type="button" class="ghost" onclick="resetAll()">Reset</button>
-    </div>
+      <label id="l_context">Optioneel: toelichting / context</label>
+      <textarea id="context" placeholder="Bijv. ‘Ik wil ook weten of mijn gegevens betrokken zijn geweest bij een datalek’ (optioneel)"></textarea>
 
-    <p class="small">
-      Tip: voeg geen BSN of kopie ID toe tenzij de organisatie dat expliciet en proportioneel vraagt.
-      Identiteitscontrole mag, maar “dataminimalisatie” blijft gelden.
-    </p>
-    <div id="msg" class="small"></div>
+      <div class="hint" id="t_hint">
+        Tip: stuur géén BSN of kopie ID mee, tenzij de organisatie dit expliciet én proportioneel vraagt.
+      </div>
+
+      <div class="btns">
+        <button class="primary" type="button" onclick="generate()">Genereer tekst</button>
+        <button class="secondary" type="button" onclick="openMail()">📩 Mail openen</button>
+        <button class="secondary" type="button" onclick="downloadPDF()">📄 Download PDF</button>
+        <button class="ghost" type="button" onclick="copyText()">📋 Kopieer</button>
+      </div>
+
+      <div class="status" id="status"></div>
+
+      <div class="qrbox">
+        <div id="qrcode" aria-label="QR code"></div>
+        <div class="qrmeta">
+          <div style="font-weight:900; margin-bottom:6px;" id="t_share">Deel deze tool</div>
+          <div class="mini">
+            <span id="t_urlhint">Zet hieronder je Cloudflare Pages URL; dan wordt de QR-code automatisch bruikbaar.</span>
+          </div>
+          <input id="siteUrl" placeholder="https://jouw-site.pages.dev" oninput="refreshQR()" />
+          <div class="mini">
+            <span class="tag" id="t_tag1">Geen opslag</span>
+            <span class="tag" id="t_tag2">Statische pagina</span>
+            <span class="tag" id="t_tag3">Gratis te hosten</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="mini" id="t_footer">
+        Juridische basis: AVG (GDPR). Reageertermijn is doorgaans 1 maand na ontvangst. Bewaar je verzendbewijs/ontvangstbevestiging.
+      </div>
+    </section>
+
+    <section class="card">
+      <h2 id="t_preview">Voorbeeld / Resultaat</h2>
+      <p class="sub" id="t_previewsub">Controleer en pas zo nodig aan voordat je verstuurt.</p>
+      <div id="result"></div>
+    </section>
   </div>
-
-  <div class="card">
-    <label>Resultaat</label>
-    <div id="result"></div>
-  </div>
+</div>
 
 <script>
-function esc(v){ return (v ?? "").toString().trim(); }
+/* ---------- i18n strings ---------- */
+const I18N = {
+  nl: {
+    title: "AVG Verzoek Generator",
+    desc: "Maak een AVG-verzoek (inzage, verwijdering, correctie, bezwaar, dataportabiliteit), download als PDF of open direct je e-mail. Niets wordt opgeslagen: alles gebeurt lokaal in je browser.",
+    today: "Datum",
+    privacy: "Opslag",
+    localonly: "Geen (lokaal)",
+    lang: "Taal",
+    form: "Gegevens",
+    formsub: "Vul zo weinig mogelijk in. Een organisatie mag om identificatie vragen, maar dataminimalisatie blijft gelden.",
+    name: "Naam",
+    email: "E-mailadres",
+    addr: "Adres",
+    city: "Postcode en woonplaats",
+    org: "Organisatie",
+    to: "Versturen naar (e-mail organisatie)",
+    type: "Type verzoek",
+    ref: "Optioneel: referentie (klantnummer e.d.)",
+    context: "Optioneel: toelichting / context",
+    hint: "Tip: stuur géén BSN of kopie ID mee, tenzij de organisatie dit expliciet én proportioneel vraagt.",
+    genOk: "Tekst gegenereerd.",
+    needTo: "Vul eerst ‘Versturen naar’ (e-mailadres organisatie) in.",
+    copied: "Tekst gekopieerd naar klembord.",
+    pdfOk: "PDF gedownload.",
+    pdfLib: "PDF-library niet geladen (controleer internet of probeer opnieuw).",
+    preview: "Voorbeeld / Resultaat",
+    previewsub: "Controleer en pas zo nodig aan voordat je verstuurt.",
+    share: "Deel deze tool",
+    urlhint: "Zet hieronder je Cloudflare Pages URL; dan wordt de QR-code automatisch bruikbaar.",
+    tag1: "Geen opslag",
+    tag2: "Statische pagina",
+    tag3: "Gratis te hosten",
+    footer: "Juridische basis: AVG (GDPR). Reageertermijn is doorgaans 1 maand na ontvangst. Bewaar je verzendbewijs/ontvangstbevestiging.",
+    subject_access: "Verzoek tot inzage persoonsgegevens (AVG artikel 15)",
+    subject_erasure: "Verzoek tot verwijdering persoonsgegevens (AVG artikel 17)",
+    subject_rectification: "Verzoek tot correctie persoonsgegevens (AVG artikel 16)",
+    subject_objection: "Bezwaar tegen verwerking persoonsgegevens (AVG artikel 21)",
+    subject_portability: "Verzoek tot dataportabiliteit (AVG artikel 20)"
+  },
+  en: {
+    title: "GDPR Request Generator",
+    desc: "Create a GDPR request (access, erasure, rectification, objection, portability), download as PDF or open your email client. Nothing is stored: everything runs locally in your browser.",
+    today: "Date",
+    privacy: "Storage",
+    localonly: "None (local)",
+    lang: "Language",
+    form: "Details",
+    formsub: "Provide as little as possible. An organisation may verify your identity, but data minimisation still applies.",
+    name: "Name",
+    email: "Email",
+    addr: "Address",
+    city: "Postal code & city",
+    org: "Organisation",
+    to: "Send to (organisation email)",
+    type: "Request type",
+    ref: "Optional: reference (customer number etc.)",
+    context: "Optional: context / notes",
+    hint: "Tip: do not include national ID numbers or ID copies unless explicitly and proportionally required.",
+    genOk: "Text generated.",
+    needTo: "Please fill in ‘Send to’ (organisation email) first.",
+    copied: "Copied to clipboard.",
+    pdfOk: "PDF downloaded.",
+    pdfLib: "PDF library not loaded (check internet or try again).",
+    preview: "Preview / Output",
+    previewsub: "Review and adjust as needed before sending.",
+    share: "Share this tool",
+    urlhint: "Enter your Cloudflare Pages URL below to make the QR code usable.",
+    tag1: "No storage",
+    tag2: "Static page",
+    tag3: "Free hosting",
+    footer: "Legal basis: GDPR. Response time is usually 1 month from receipt. Keep proof of sending/receipt.",
+    subject_access: "Request for access to personal data (GDPR Article 15)",
+    subject_erasure: "Request for erasure of personal data (GDPR Article 17)",
+    subject_rectification: "Request for rectification of personal data (GDPR Article 16)",
+    subject_objection: "Objection to processing of personal data (GDPR Article 21)",
+    subject_portability: "Request for data portability (GDPR Article 20)"
+  }
+};
 
-function buildLetter() {
-  const naam = esc(document.getElementById("naam").value) || "[Naam]";
-  const email = esc(document.getElementById("email").value) || "[E-mailadres]";
-  const adres = esc(document.getElementById("adres").value) || "[Adres]";
-  const plaats = esc(document.getElementById("plaats").value) || "[Postcode en woonplaats]";
-  const org = esc(document.getElementById("organisatie").value) || "[Organisatie]";
-  const ident = esc(document.getElementById("ident").value);
-  const context = esc(document.getElementById("context").value);
+function $(id){ return document.getElementById(id); }
+function trim(v){ return (v ?? "").toString().trim(); }
 
-  const extraIdent = ident ? `\nTer ondersteuning van mijn identificatie geef ik hierbij (alleen indien noodzakelijk): ${ident}\n` : "";
-  const extraContext = context ? `\nToelichting:\n${context}\n` : "";
+function setText(id, value){ const el = $(id); if(el) el.textContent = value; }
+function setLabel(id, value){ const el = $(id); if(el) el.textContent = value; }
 
-  const tekst =
-`Geachte heer/mevrouw,
+function currentDateString(lang){
+  const d = new Date();
+  try {
+    return d.toLocaleDateString(lang === "en" ? "en-GB" : "nl-NL", { year:"numeric", month:"long", day:"numeric" });
+  } catch {
+    return d.toISOString().slice(0,10);
+  }
+}
+
+function requestSubject(lang, type){
+  const t = I18N[lang];
+  return t["subject_" + type] || t.subject_access;
+}
+
+function buildLetter(lang){
+  const t = I18N[lang];
+  const name = trim($("name").value) || (lang === "en" ? "[Name]" : "[Naam]");
+  const email = trim($("email").value) || (lang === "en" ? "[Email]" : "[E-mailadres]");
+  const addr  = trim($("addr").value)  || (lang === "en" ? "[Address]" : "[Adres]");
+  const city  = trim($("city").value)  || (lang === "en" ? "[Postal code and city]" : "[Postcode en woonplaats]");
+  const org   = trim($("org").value)   || (lang === "en" ? "[Organisation]" : "[Organisatie]");
+  const ref   = trim($("ref").value);
+  const ctx   = trim($("context").value);
+  const type  = $("type").value;
+
+  const dateLine = currentDateString(lang);
+  const refLine = ref ? (lang === "en" ? `Reference (optional): ${ref}\n` : `Referentie (optioneel): ${ref}\n`) : "";
+  const ctxBlock = ctx ? `\n${lang === "en" ? "Context / notes:" : "Toelichting:"}\n${ctx}\n` : "";
+
+  if(lang === "en"){
+    if(type === "access"){
+      return `Date: ${dateLine}
+
+Dear Sir/Madam,
+
+I hereby exercise my right of access under Article 15 of the General Data Protection Regulation (GDPR).
+
+Please provide me with written confirmation whether you process my personal data and, if so, provide a copy of all personal data you hold about me, as well as the following information:
+- the purposes of processing;
+- the categories of personal data;
+- the recipients or categories of recipients to whom my data have been disclosed;
+- the envisaged retention period (or the criteria used to determine it);
+- the source of the data where not obtained directly from me;
+- information about automated decision-making and profiling (if applicable).
+
+In addition, please explicitly confirm:
+1) whether my personal data have been involved in a personal data breach or security incident;
+2) if so, which specific data were affected;
+3) when the incident occurred;
+4) what measures were taken to mitigate the consequences;
+5) whether and when the incident was reported to the competent supervisory authority.
+
+Please respond free of charge within the statutory time limit of one month from receipt of this request.
+
+If you require additional information to verify my identity, please specify what is needed and why, in line with the principle of data minimisation.
+
+Kind regards,
+
+${name}
+${addr}
+${city}
+${email}
+${refLine}${ctxBlock}`;
+    }
+
+    if(type === "erasure"){
+      return `Date: ${dateLine}
+
+Dear Sir/Madam,
+
+I hereby exercise my right to erasure under Article 17 of the GDPR.
+
+Please erase my personal data that you process about me, unless you can demonstrate a lawful basis and necessity to retain specific data (e.g., legal obligation). If you refuse (in whole or in part), please provide a reasoned response including the relevant legal basis.
+
+Additionally, please inform me:
+- which data have been erased and when;
+- which data are retained (if any) and for what reason/retention period;
+- whether my data have been shared with third parties and, where applicable, that you have informed them of this erasure request (Article 19 GDPR).
+
+Please respond free of charge within one month of receipt.
+
+If identity verification is required, please request only what is strictly necessary.
+
+Kind regards,
+
+${name}
+${addr}
+${city}
+${email}
+${refLine}${ctxBlock}`;
+    }
+
+    if(type === "rectification"){
+      return `Date: ${dateLine}
+
+Dear Sir/Madam,
+
+I hereby exercise my right to rectification under Article 16 of the GDPR.
+
+Please correct or complete my personal data where they are inaccurate or incomplete. If you need clarification, please inform me which fields you consider inaccurate and what evidence you require, in line with data minimisation.
+
+Please also inform me whether you have disclosed the relevant data to third parties and, where applicable, that you have notified them of the rectification (Article 19 GDPR).
+
+Please respond free of charge within one month of receipt.
+
+Kind regards,
+
+${name}
+${addr}
+${city}
+${email}
+${refLine}${ctxBlock}`;
+    }
+
+    if(type === "objection"){
+      return `Date: ${dateLine}
+
+Dear Sir/Madam,
+
+I hereby object to the processing of my personal data under Article 21 of the GDPR.
+
+Please stop processing my personal data for the purposes to which this objection relates, unless you can demonstrate compelling legitimate grounds that override my interests, rights and freedoms, or the processing is required for legal claims.
+
+If this objection concerns direct marketing, please cease processing immediately (Article 21(2) GDPR).
+
+Please confirm in writing what action you have taken within one month of receipt.
+
+Kind regards,
+
+${name}
+${addr}
+${city}
+${email}
+${refLine}${ctxBlock}`;
+    }
+
+    // portability
+    return `Date: ${dateLine}
+
+Dear Sir/Madam,
+
+I hereby exercise my right to data portability under Article 20 of the GDPR.
+
+Please provide me with the personal data concerning me which I have provided to you, in a structured, commonly used and machine-readable format. Where technically feasible, I request that you transmit these data directly to another controller upon my request.
+
+Please confirm the scope of the data you will provide and the format/delivery method.
+
+Please respond free of charge within one month of receipt.
+
+Kind regards,
+
+${name}
+${addr}
+${city}
+${email}
+${refLine}${ctxBlock}`;
+  }
+
+  // NL texts
+  if(type === "access"){
+    return `Datum: ${dateLine}
+
+Geachte heer/mevrouw,
 
 Hierbij doe ik een formeel beroep op mijn recht op inzage zoals vastgelegd in artikel 15 van de Algemene Verordening Gegevensbescherming (AVG).
 
@@ -132,107 +569,339 @@ Daarnaast verzoek ik u expliciet te bevestigen:
 Ik verzoek u mij deze informatie kosteloos en binnen de wettelijke termijn van één maand na ontvangst van dit verzoek toe te sturen.
 
 Indien u aanvullende informatie nodig heeft om mijn identiteit te verifiëren, verzoek ik u dit zo spoedig mogelijk en gemotiveerd aan te geven, met inachtneming van het beginsel van dataminimalisatie.
-${extraIdent}${extraContext}
+
 Met vriendelijke groet,
 
-${naam}
-${adres}
-${plaats}
+${name}
+${addr}
+${city}
 ${email}
-`;
-  return tekst;
-}
-
-function generate() {
-  const letter = buildLetter();
-  document.getElementById("result").textContent = letter;
-  flash("Tekst gegenereerd.", true);
-}
-
-function openMail() {
-  const to = esc(document.getElementById("naar").value);
-  const subject = "Verzoek tot inzage persoonsgegevens (AVG artikel 15)";
-  const body = buildLetter();
-
-  if (!to) {
-    flash("Vul eerst ‘Versturen naar’ (e-mailadres organisatie) in.", false);
-    return;
+${refLine}${ctxBlock}`;
   }
+
+  if(type === "erasure"){
+    return `Datum: ${dateLine}
+
+Geachte heer/mevrouw,
+
+Hierbij doe ik een formeel beroep op mijn recht op gegevenswissing zoals vastgelegd in artikel 17 AVG.
+
+Ik verzoek u mijn persoonsgegevens die u van mij verwerkt te verwijderen, tenzij u kunt aantonen dat er voor specifieke gegevens een wettelijke grondslag en noodzaak bestaat om deze te bewaren (bijvoorbeeld een wettelijke bewaarplicht). Indien u (gedeeltelijk) weigert, verzoek ik u om een gemotiveerde reactie met verwijzing naar de relevante wettelijke grondslag.
+
+Daarnaast verzoek ik u mij te informeren:
+- welke gegevens zijn verwijderd en op welke datum;
+- welke gegevens (indien van toepassing) worden behouden en waarom, inclusief bewaartermijn;
+- of mijn gegevens aan derden zijn verstrekt en – waar van toepassing – dat u deze derden heeft geïnformeerd over dit verzoek (artikel 19 AVG).
+
+Ik verzoek u binnen één maand na ontvangst te reageren.
+
+Met vriendelijke groet,
+
+${name}
+${addr}
+${city}
+${email}
+${refLine}${ctxBlock}`;
+  }
+
+  if(type === "rectification"){
+    return `Datum: ${dateLine}
+
+Geachte heer/mevrouw,
+
+Hierbij doe ik een formeel beroep op mijn recht op rectificatie zoals vastgelegd in artikel 16 AVG.
+
+Ik verzoek u mijn persoonsgegevens te corrigeren en/of aan te vullen wanneer deze onjuist of onvolledig zijn. Indien u verduidelijking nodig heeft, verzoek ik u aan te geven om welke velden het gaat en welke onderbouwing u strikt noodzakelijk acht, met inachtneming van dataminimalisatie.
+
+Daarnaast verzoek ik u te bevestigen of u de betreffende gegevens aan derden heeft verstrekt en – waar van toepassing – dat u deze derden heeft geïnformeerd over de rectificatie (artikel 19 AVG).
+
+Ik verzoek u binnen één maand na ontvangst te reageren.
+
+Met vriendelijke groet,
+
+${name}
+${addr}
+${city}
+${email}
+${refLine}${ctxBlock}`;
+  }
+
+  if(type === "objection"){
+    return `Datum: ${dateLine}
+
+Geachte heer/mevrouw,
+
+Hierbij maak ik bezwaar tegen de verwerking van mijn persoonsgegevens op grond van artikel 21 AVG.
+
+Ik verzoek u de verwerking voor de doeleinden waarop dit bezwaar betrekking heeft te staken, tenzij u dwingende gerechtvaardigde gronden kunt aantonen die zwaarder wegen dan mijn belangen, rechten en vrijheden, of de verwerking noodzakelijk is voor de instelling, uitoefening of onderbouwing van een rechtsvordering.
+
+Indien dit bezwaar betrekking heeft op direct marketing, verzoek ik u de verwerking per direct te beëindigen (artikel 21 lid 2 AVG).
+
+Graag ontvang ik binnen één maand na ontvangst een schriftelijke bevestiging van de door u genomen maatregelen.
+
+Met vriendelijke groet,
+
+${name}
+${addr}
+${city}
+${email}
+${refLine}${ctxBlock}`;
+  }
+
+  // portability
+  return `Datum: ${dateLine}
+
+Geachte heer/mevrouw,
+
+Hierbij doe ik een formeel beroep op mijn recht op dataportabiliteit zoals vastgelegd in artikel 20 AVG.
+
+Ik verzoek u mij de persoonsgegevens die ik aan u heb verstrekt, te verstrekken in een gestructureerd, gangbaar en machineleesbaar formaat. Waar technisch mogelijk verzoek ik u deze gegevens op mijn verzoek rechtstreeks over te dragen aan een andere verwerkingsverantwoordelijke.
+
+Graag ontvang ik een bevestiging van de omvang van de gegevens die u zult leveren en in welk formaat/leverwijze.
+
+Ik verzoek u binnen één maand na ontvangst te reageren.
+
+Met vriendelijke groet,
+
+${name}
+${addr}
+${city}
+${email}
+${refLine}${ctxBlock}`;
+}
+
+function generate(){
+  const lang = $("lang").value;
+  const letter = buildLetter(lang);
+  $("result").textContent = letter;
+  setStatus(I18N[lang].genOk, true);
+}
+
+function setStatus(msg, ok){
+  $("status").innerHTML = ok
+    ? `<span class="ok">✓</span> ${msg}`
+    : `<span class="bad">✕</span> ${msg}`;
+}
+
+function openMail(){
+  const lang = $("lang").value;
+  const to = trim($("to").value);
+  if(!to){ setStatus(I18N[lang].needTo, false); return; }
+
+  const type = $("type").value;
+  const subject = requestSubject(lang, type);
+  const body = buildLetter(lang);
+
   const mailto = `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   window.location.href = mailto;
 }
 
-async function downloadPDF() {
-  generate(); // ensure updated
-  const text = document.getElementById("result").textContent.trim();
-  if (!text) { flash("Geen tekst om te exporteren.", false); return; }
+async function copyText(){
+  const lang = $("lang").value;
+  generate();
+  const text = $("result").textContent;
+  if(!text.trim()) return;
 
-  if (!window.jspdf || !window.jspdf.jsPDF) {
-    flash("PDF-library niet geladen (probeer opnieuw of controleer internet).", false);
-    return;
-  }
-
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({ unit: "pt", format: "a4" });
-
-  const margin = 48;
-  const pageWidth = doc.internal.pageSize.getWidth();
-  const maxWidth = pageWidth - margin*2;
-
-  doc.setFont("times", "normal");
-  doc.setFontSize(12);
-
-  const lines = doc.splitTextToSize(text, maxWidth);
-  let y = margin;
-
-  lines.forEach(line => {
-    if (y > doc.internal.pageSize.getHeight() - margin) {
-      doc.addPage();
-      y = margin;
-    }
-    doc.text(line, margin, y);
-    y += 16;
-  });
-
-  const filename = "avg-inzageverzoek.pdf";
-  doc.save(filename);
-  flash("PDF gedownload.", true);
-}
-
-async function copyText() {
-  generate(); // ensure updated
-  const text = document.getElementById("result").textContent;
-  if (!text.trim()) { flash("Geen tekst om te kopiëren.", false); return; }
-
-  try {
+  try{
     await navigator.clipboard.writeText(text);
-    flash("Tekst gekopieerd naar klembord.", true);
-  } catch {
-    // fallback
+    setStatus(I18N[lang].copied, true);
+  }catch{
     const ta = document.createElement("textarea");
     ta.value = text;
     document.body.appendChild(ta);
     ta.select();
     document.execCommand("copy");
     document.body.removeChild(ta);
-    flash("Tekst gekopieerd (fallback).", true);
+    setStatus(I18N[lang].copied, true);
   }
 }
 
-function resetAll() {
-  ["naam","email","adres","plaats","organisatie","naar","ident","context"].forEach(id => {
-    document.getElementById(id).value = "";
+function downloadPDF(){
+  const lang = $("lang").value;
+  generate();
+
+  if(!window.jspdf || !window.jspdf.jsPDF){
+    setStatus(I18N[lang].pdfLib, false);
+    return;
+  }
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit: "pt", format: "a4" });
+
+  const text = $("result").textContent.trim();
+  const margin = 52;
+  const pageW = doc.internal.pageSize.getWidth();
+  const pageH = doc.internal.pageSize.getHeight();
+  const maxW = pageW - margin*2;
+
+  const headerTitle = (lang === "en") ? "GDPR Request" : "AVG Verzoek";
+  const org = trim($("org").value) || (lang === "en" ? "Organisation" : "Organisatie");
+  const type = $("type").value;
+  const typeLabel = $("type").selectedOptions[0]?.textContent || "";
+  const dateLine = currentDateString(lang);
+
+  doc.setFont("times", "bold");
+  doc.setFontSize(14);
+  doc.text(headerTitle, margin, 48);
+
+  doc.setFont("times", "normal");
+  doc.setFontSize(10);
+  doc.text(`${org} • ${typeLabel} • ${dateLine}`, margin, 66);
+
+  doc.setDrawColor(200);
+  doc.line(margin, 74, pageW - margin, 74);
+
+  doc.setFont("times", "normal");
+  doc.setFontSize(11);
+
+  const lines = doc.splitTextToSize(text, maxW);
+  let y = 96;
+  let page = 1;
+
+  function footer(){
+    doc.setFontSize(9);
+    doc.setTextColor(120);
+    doc.text(`${page}`, pageW - margin, pageH - 30, { align:"right" });
+    doc.setTextColor(0);
+  }
+
+  lines.forEach(line => {
+    if(y > pageH - 60){
+      footer();
+      doc.addPage();
+      page += 1;
+      // header again
+      doc.setFont("times", "bold"); doc.setFontSize(14);
+      doc.text(headerTitle, margin, 48);
+      doc.setFont("times", "normal"); doc.setFontSize(10);
+      doc.text(`${org} • ${typeLabel} • ${dateLine}`, margin, 66);
+      doc.setDrawColor(200);
+      doc.line(margin, 74, pageW - margin, 74);
+      doc.setFont("times", "normal"); doc.setFontSize(11);
+      y = 96;
+    }
+    doc.text(line, margin, y);
+    y += 15.5;
   });
-  document.getElementById("result").textContent = "";
-  document.getElementById("msg").textContent = "";
+
+  footer();
+
+  const base = (lang === "en") ? "gdpr-request" : "avg-verzoek";
+  const filename = `${base}-${type}.pdf`;
+  doc.save(filename);
+
+  setStatus(I18N[lang].pdfOk, true);
 }
 
-function flash(message, ok) {
-  const el = document.getElementById("msg");
-  el.textContent = message;
-  el.className = "small " + (ok ? "ok" : "");
-  setTimeout(() => { el.textContent = ""; el.className = "small"; }, 3500);
+function resetAll(){
+  ["name","email","addr","city","org","to","ref","context"].forEach(id => $(id).value = "");
+  $("type").value = "access";
+  $("result").textContent = "";
+  $("status").textContent = "";
 }
+
+function prefillOdido(){
+  // Let op: organisatie-email kan veranderen; daarom is dit optioneel.
+  // Vul hier gerust jouw voorkeursadres in, of laat leeg zodat gebruiker het zelf invult.
+  $("org").value = "Odido";
+  if(!$("to").value.trim()){
+    $("to").value = ""; // bewust leeg (minder kans op verouderd adres)
+  }
+  $("context").value = $("lang").value === "en"
+    ? "I would also like confirmation whether my data were involved in any personal data breach and which data were affected."
+    : "Ik wil ook bevestiging of mijn gegevens betrokken zijn geweest bij een datalek en zo ja, welke gegevens het betrof.";
+  generate();
+}
+
+function applyLang(){
+  const lang = $("lang").value;
+  const t = I18N[lang];
+
+  setText("t_title", t.title);
+  setText("t_desc", t.desc);
+  setText("t_today", t.today);
+  setText("t_privacy", t.privacy);
+  setText("t_localonly", t.localonly);
+  setText("t_lang", t.lang);
+
+  setText("t_form", t.form);
+  setText("t_formsub", t.formsub);
+
+  setLabel("l_name", t.name);
+  setLabel("l_email", t.email);
+  setLabel("l_addr", t.addr);
+  setLabel("l_city", t.city);
+  setLabel("l_org", t.org);
+  setLabel("l_to", t.to);
+  setLabel("l_type", t.type);
+  setLabel("l_ref", t.ref);
+  setLabel("l_context", t.context);
+
+  setText("t_hint", t.hint);
+
+  setText("t_preview", t.preview);
+  setText("t_previewsub", t.previewsub);
+
+  setText("t_share", t.share);
+  setText("t_urlhint", t.urlhint);
+  setText("t_tag1", t.tag1);
+  setText("t_tag2", t.tag2);
+  setText("t_tag3", t.tag3);
+  setText("t_footer", t.footer);
+
+  $("today").textContent = currentDateString(lang);
+
+  // update placeholders
+  $("name").placeholder = (lang==="en") ? "Full name" : "Voor- en achternaam";
+  $("email").placeholder = (lang==="en") ? "name@example.com" : "naam@voorbeeld.nl";
+  $("addr").placeholder = (lang==="en") ? "Street + number" : "Straat + huisnummer";
+  $("city").placeholder = (lang==="en") ? "1234 AB City" : "1234 AB Plaats";
+  $("org").placeholder = (lang==="en") ? "e.g. Odido" : "Bijv. Odido";
+  $("to").placeholder  = (lang==="en") ? "privacy@organisation.com" : "privacy@organisatie.nl";
+  $("ref").placeholder = (lang==="en") ? "Customer no. / contract no. (optional)" : "Bijv. klantnummer / contractnummer (optioneel)";
+  $("context").placeholder = (lang==="en")
+    ? "Optional notes (e.g. ‘possible involvement in a data breach’)"
+    : "Bijv. ‘mogelijk betrokken bij datalek’ (optioneel)";
+
+  // refresh output if present
+  if($("result").textContent.trim()) generate();
+}
+
+let qr;
+function refreshQR(){
+  const url = trim($("siteUrl").value);
+  const box = $("qrcode");
+  box.innerHTML = "";
+  if(!url){
+    // show placeholder
+    box.style.background = "#fff";
+    return;
+  }
+  if(typeof QRCode === "undefined") return;
+
+  qr = new QRCode(box, {
+    text: url,
+    width: 104,
+    height: 104,
+    correctLevel: QRCode.CorrectLevel.M
+  });
+}
+
+function init(){
+  $("today").textContent = currentDateString("nl");
+  applyLang();
+  $("lang").addEventListener("change", applyLang);
+
+  // If hosted, auto-fill the pages URL in QR input for convenience
+  const current = window.location.href;
+  if(current.startsWith("http")){
+    $("siteUrl").value = current.replace(/#.*$/,"");
+    setTimeout(refreshQR, 200);
+  } else {
+    setTimeout(refreshQR, 200);
+  }
+}
+
+document.addEventListener("DOMContentLoaded", init);
 </script>
 
 </body>
